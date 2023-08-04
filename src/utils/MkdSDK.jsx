@@ -2,7 +2,7 @@ export default function MkdSDK() {
   this._baseurl = "https://reacttask.mkdlabs.com";
   this._project_id = "reacttask";
   this._secret = "d9hedycyv6p7zw8xi34t9bmtsjsigy5t7";
-  this._table = "";
+  this._table = "video";
   this._custom = "";
   this._method = "";
 
@@ -14,7 +14,18 @@ export default function MkdSDK() {
   };
   
   this.login = async function (email, password, role) {
-    //TODO
+    const response = await fetch(this._baseurl + "/v2/api/lambda/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-project": base64Encode,
+
+      },
+      body: JSON.stringify({ email, password, role }),
+    });
+
+    const data = await response.json();
+    return data;
   };
 
   this.getHeader = function () {
@@ -86,8 +97,25 @@ export default function MkdSDK() {
     }
   };  
 
-  this.check = async function (role) {
-    //TODO
+  
+  this.check = async function () {
+    const role=localStorage.getItem("role")
+    const response = await fetch(this._baseurl + "/v2/api/lambda/check", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-project": base64Encode,
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: JSON.stringify({ role }),
+    });
+
+    if (response.status === 200) {
+      const data = await response.json();
+      return data;
+    } else {
+      throw new Error("Token check failed");
+    }
   };
 
   return this;

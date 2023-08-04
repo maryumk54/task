@@ -50,7 +50,6 @@ export const showToast = (dispatch, message, timeout = 3000) => {
 
 const GlobalProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
-
   return (
     <GlobalContext.Provider
       value={{
