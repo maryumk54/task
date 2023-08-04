@@ -4,18 +4,24 @@ import MkdSDK from "./utils/MkdSDK";
 export const AuthContext = React.createContext();
 
 const initialState = {
-  isAuthenticated: false,
+  isAuthenticated: localStorage.getItem("token") ? true : false,
   user: null,
-  token: null,
-  role: null,
+  token: localStorage.getItem("token") || null, // Check if token exists in local storage
+  role: localStorage.getItem("role")|| null  // Check if role exists in local storage
 };
 
 const reducer = (state, action) => {
   switch (action.type) {
     case "LOGIN":
-      //TODO
+      const { user, token, role } = action.payload; // Extract user, token, and role from payload
+      localStorage.setItem("token", token); // Store token in local storage
+      localStorage.setItem("role", role); // Store role in local storage
       return {
         ...state,
+        isAuthenticated: true,
+        user,
+        token,
+        role,
       };
     case "LOGOUT":
       localStorage.clear();
@@ -44,8 +50,22 @@ export const tokenExpireError = (dispatch, errorMessage) => {
 const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+// function to check token validity
+const checkToken = async () => {
+  try {
+    await sdk.check(); //Status code 200 means valid
+  } catch (error) {
+    dispatch({ type: 'LOGOUT' });
+  };
+}
+
   React.useEffect(() => {
-    //TODO
+    checkToken()
+    const tokenCheckInterval = setInterval(checkToken, 6000); // one minute 
+
+    return () => {
+      clearInterval(tokenCheckInterval); // Clear the interval when the component unmounts
+    };
   }, []);
 
   return (

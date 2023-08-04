@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState } from "react"; 
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import MkdSDK from "../utils/MkdSDK";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../authContext";
+import { GlobalContext, showToast } from "../globalContext";
+
 
 const AdminLoginPage = () => {
   const schema = yup
@@ -14,8 +16,10 @@ const AdminLoginPage = () => {
     })
     .required();
 
-  const { dispatch } = React.useContext(AuthContext);
-  const navigate = useNavigate();
+    const { dispatch: authDispatch } = React.useContext(AuthContext); // Renamed to authDispatch
+    const { dispatch: globalDispatch } = React.useContext(GlobalContext); // Renamed to globalDispatch
+  
+    const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -25,10 +29,29 @@ const AdminLoginPage = () => {
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = async (data) => {
-    let sdk = new MkdSDK();
-    //TODO
-  };
+const onSubmit = async (data) => {
+  let sdk = new MkdSDK();
+
+  try {
+    const response = await sdk.login(data.email, data.password, "admin");
+    if (response.token) {
+      showToast(globalDispatch, "Logged in successfully!"); // Show success message
+
+      authDispatch({
+        type: "LOGIN",
+        payload: {
+          user: response.user, 
+          token: response.token,
+          role: response.role,
+        },
+      });
+      navigate("/admin/dashboard");
+    }
+  } catch (error) {
+    showToast(globalDispatch, "Login failed" || error.response.message);  // Show error message 
+  }
+
+};
 
   return (
     <div className="w-full max-w-xs mx-auto">
@@ -81,7 +104,7 @@ const AdminLoginPage = () => {
           />
         </div>
       </form>
-    </div>
+        </div>
   );
 };
 
